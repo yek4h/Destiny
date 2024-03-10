@@ -1,0 +1,127 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+/*plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+}
+
+group = 'dev.yek4h.hub'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'land.combo.darling:Darling:1.0-SNAPSHOT'
+    implementation 'land.combo.samurai:Samurai-server:1.8.8-R0.1-SNAPSHOT'
+    implementation 'io.github.thatkawaiisam:assemble:1.0-SNAPSHOT'
+    implementation files('D:\\xd\\KotlinProjects\\Destiny\\libs\\PlaceHolderAPI.jar')
+    //testImplementation 'org.jetbrains.kotlin:kotlin-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(11)
+}*/
+
+plugins {
+    id 'idea'
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+group = 'dev.yek4h.hub'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.31'
+
+    compileOnly 'land.combo.darling:Darling:1.0-SNAPSHOT'
+    compileOnly 'land.combo.samurai:Samurai-server:1.8.8-R0.1-SNAPSHOT'
+    implementation 'dev.t4yrn.yek4h:mizuki:1.0-SNAPSHOT'
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+kotlin {
+    sourceSets {
+        main {
+            kotlin.srcDirs += "src/main/kotlin"
+        }
+    }
+}
+
+shadowJar {
+    classifier = null
+    exclude "**/*.kotlin_metadata"
+    exclude "**/*.kotlin_module"
+    exclude "**/*.kotlin_builtins"
+    project.configurations.implementation.canBeResolved = true
+    configurations = [project.configurations.implementation]
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+        }
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    destinationDirectory = file("C:\\Users\\Antonio\\Desktop\\new\\.exported")
+    archiveName("hub-${project.version}.jar")
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset "UTF-8"
+    filesMatching("plugin.yml") {
+        expand props
+    }
+}
+
+tasks.withType(KotlinCompile) {
+    kotlinOptions.jvmTarget = "11"
+}
+
+
+tasks.register('printBytecode') {
+    dependsOn 'compileKotlin'
+
+    doLast {
+        def classFile = file("build/classes/kotlin/main/dev/yek4h/hub/Destiny.class")
+        def outputFile = file("build/class.dll")
+
+        // Verificar si el archivo .class existe
+        if (classFile.exists()) {
+            // Copiar el contenido del archivo .class al archivo .dll
+            outputFile.text = classFile.bytes
+        } else {
+            throw new GradleException("El archivo .class no existe en la ubicación esperada.")
+        }
+    }
+}
